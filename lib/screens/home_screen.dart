@@ -4,8 +4,9 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../models/file_model.dart';
+import '../l10n/app_localizations.dart';
 import '../providers/file_scanner_provider.dart';
+import '../providers/language_provider.dart';
 import '../widgets/preview_panel.dart';
 
 import 'video_preview_screen.dart';
@@ -13,7 +14,7 @@ import 'video_preview_screen.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  Widget _buildSingleFilePreview(String path) {
+  Widget _buildSingleFilePreview(BuildContext context, String path) {
     final extension = path.toLowerCase().substring(path.lastIndexOf('.'));
     final imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp'];
     final videoExtensions = ['.mp4', '.mov', '.avi', '.mkv', '.wmv'];
@@ -23,18 +24,37 @@ class HomeScreen extends StatelessWidget {
     } else if (videoExtensions.contains(extension)) {
       return VideoPreviewScreen(videoPath: path);
     } else {
-      return Center(child: Text("No preview available for this file type: $extension"));
+      return Center(child: Text("${AppLocalizations.of(context)!.noPreviewAvailable}: $extension"));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<FileScannerProvider>(context);
-    final selectedGroup = provider.groupForPreview;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Duplicate File Scanner"),
+        title: Text(l10n.appTitle),
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (String result) {
+              final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
+              languageProvider.setLanguage(result);
+            },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              PopupMenuItem<String>(
+                value: 'en',
+                child: Text(l10n.english),
+              ),
+              PopupMenuItem<String>(
+                value: 'zh',
+                child: Text(l10n.chinese),
+              ),
+            ],
+            child: Icon(Icons.language),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -52,7 +72,7 @@ class HomeScreen extends StatelessWidget {
                       provider.setDirectory(Directory(path));
                     }
                   },
-                  label: const Text("Select Directory"),
+                  label: Text(l10n.selectDirectory),
                 ),
                 const SizedBox(width: 16),
                 ElevatedButton.icon(
@@ -60,7 +80,7 @@ class HomeScreen extends StatelessWidget {
                   onPressed: (provider.selectedDirectory == null || provider.isScanning)
                       ? null
                       : () => provider.startScan(),
-                  label: const Text("Scan"),
+                  label: Text(l10n.scan),
                 ),
               ],
             ),
@@ -68,7 +88,7 @@ class HomeScreen extends StatelessWidget {
           if (provider.selectedDirectory != null && !provider.isScanning)
             Padding(
               padding: const EdgeInsets.only(bottom: 8.0),
-              child: Text("Selected: ${provider.selectedDirectory!.path}", style: Theme.of(context).textTheme.bodySmall),
+              child: Text("${l10n.selected}: ${provider.selectedDirectory!.path}", style: Theme.of(context).textTheme.bodySmall),
             ),
           if (provider.isScanning)
             Padding(
@@ -96,8 +116,8 @@ class HomeScreen extends StatelessWidget {
                       return ExpansionTile(
                         key: PageStorageKey(group.hash), // Keep expansion state
                         leading: CircleAvatar(child: Text("${group.paths.length}")),
-                        title: Text("Hash: ${group.hash.substring(0, 10)}..."),
-                        subtitle: Text("Size: ${group.size} bytes"),
+                        title: Text("${l10n.hash}: ${group.hash.substring(0, 10)}..."),
+                        subtitle: Text("${l10n.size}: ${group.size} ${l10n.bytes}"),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -121,12 +141,12 @@ class HomeScreen extends StatelessWidget {
                                 showDialog(
                                   context: context,
                                   builder: (context) => AlertDialog(
-                                    title: const Text("Delete File?"),
-                                    content: Text("Are you sure you want to permanently delete this file?\n\n$path"),
+                                    title: Text(l10n.deleteFile),
+                                    content: Text("${l10n.deleteConfirmation}\n\n$path"),
                                     actions: [
                                       TextButton(
                                         onPressed: () => Navigator.of(context).pop(),
-                                        child: const Text("Cancel"),
+                                        child: Text(l10n.cancel),
                                       ),
                                       TextButton(
                                         onPressed: () {
@@ -135,12 +155,12 @@ class HomeScreen extends StatelessWidget {
                                             provider.removeFileFromGroup(group.hash, path);
                                           } catch (e) {
                                             ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(content: Text("Error deleting file: $e")),
+                                              SnackBar(content: Text("${l10n.errorDeletingFile}: $e")),
                                             );
                                           }
                                           Navigator.of(context).pop();
                                         },
-                                        child: const Text("Delete", style: TextStyle(color: Colors.red)),
+                                        child: Text(l10n.delete, style: TextStyle(color: Colors.red)),
                                       ),
                                     ],
                                   ),
@@ -159,10 +179,10 @@ class HomeScreen extends StatelessWidget {
                 Expanded(
                   flex: 3,
                   child: provider.fileForPreview != null
-                      ? _buildSingleFilePreview(provider.fileForPreview!)
+                      ? _buildSingleFilePreview(context, provider.fileForPreview!)
                       : (provider.groupForPreview != null
                           ? PreviewPanel(fileGroup: provider.groupForPreview!)
-                          : const Center(child: Text("Select a group or file to preview")))
+                          : Center(child: Text(l10n.selectGroupOrFile)))
                 ),
               ],
             ),
