@@ -13,24 +13,36 @@ class FileScannerProvider with ChangeNotifier {
   String _currentFilePath = '';
   List<FileGroup> _duplicateFiles = [];
   Directory? _selectedDirectory;
-  FileGroup? _selectedGroupForPreview;
+
+  // State for the new preview logic
+  FileGroup? _groupForPreview;
+  String? _fileForPreview;
 
   bool get isScanning => _isScanning;
   double get progress => _progress;
   String get currentFilePath => _currentFilePath;
   List<FileGroup> get duplicateFiles => _duplicateFiles;
   Directory? get selectedDirectory => _selectedDirectory;
-  FileGroup? get selectedGroupForPreview => _selectedGroupForPreview;
+  FileGroup? get groupForPreview => _groupForPreview;
+  String? get fileForPreview => _fileForPreview;
 
   void setDirectory(Directory? directory) {
     _selectedDirectory = directory;
-    _duplicateFiles = []; // Clear previous results
-    _selectedGroupForPreview = null;
+    _duplicateFiles = [];
+    _groupForPreview = null;
+    _fileForPreview = null;
     notifyListeners();
   }
 
   void selectGroupForPreview(FileGroup group) {
-    _selectedGroupForPreview = group;
+    _groupForPreview = group;
+    _fileForPreview = null; // Clear single file selection
+    notifyListeners();
+  }
+
+  void selectFileForPreview(String path) {
+    _fileForPreview = path;
+    _groupForPreview = null; // Clear group selection
     notifyListeners();
   }
 
@@ -40,8 +52,17 @@ class FileScannerProvider with ChangeNotifier {
       final group = _duplicateFiles[groupIndex];
       group.paths.remove(path);
 
+      // If the deleted file was being previewed, clear the preview
+      if (_fileForPreview == path) {
+        _fileForPreview = null;
+      }
+
       if (group.paths.length < 2) {
         _duplicateFiles.removeAt(groupIndex);
+        // If the group was being previewed, clear the preview
+        if (_groupForPreview?.hash == hash) {
+          _groupForPreview = null;
+        }
       }
       notifyListeners();
     }
@@ -56,6 +77,8 @@ class FileScannerProvider with ChangeNotifier {
     _progress = 0.0;
     _currentFilePath = '';
     _duplicateFiles = [];
+    _groupForPreview = null;
+    _fileForPreview = null;
     notifyListeners();
 
     await _scannerService.startScan(
