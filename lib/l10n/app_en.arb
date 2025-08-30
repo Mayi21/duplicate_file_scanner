@@ -1,0 +1,8 @@
+{
+  "appTitle": "Duplicate File Scanner",
+  "selectDirectory": "Select Directory",
+  "scan": "Scan",
+  "scanning": "Scanning...",
+  "error": "Error",
+  "ok": "OK"
+}
