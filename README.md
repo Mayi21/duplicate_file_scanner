@@ -1,16 +1,105 @@
-# duplicate_file_scanner
+# 重复文件扫描器
 
-A new Flutter project.
+一个基于 Flutter 开发的桌面应用程序，用于扫描、查找和管理重复文件。
 
-## Getting Started
+## 项目结构
 
-This project is a starting point for a Flutter application.
+```
+duplicate_file_scanner/
+├── android/                   # Android 平台相关文件
+├── ios/                       # iOS 平台相关文件
+├── lib/                       # Dart 源代码
+│   ├── l10n/                  # 国际化资源文件和生成代码
+│   ├── models/                # 数据模型定义
+│   ├── providers/             # 状态管理（使用 Provider）
+│   ├── screens/               # 应用程序的各个界面
+│   ├── services/              # 核心业务逻辑（如文件扫描）
+│   ├── theme/                 # 应用主题定义
+│   ├── utils/                 # 工具类和辅助函数
+│   ├── widgets/               # 可复用 UI 组件
+│   └── main.dart              # 应用入口文件
+├── linux/                     # Linux 平台相关文件
+├── macos/                     # macOS 平台相关文件
+├── test/                      # 单元测试和组件测试
+├── web/                       # Web 平台相关文件
+├── windows/                   # Windows 平台相关文件
+├── l10n.yaml                  # 国际化配置
+├── pubspec.yaml               # 项目依赖和元数据
+└── README.md                  # 项目说明文件
+```
 
-A few resources to get you started if this is your first Flutter project:
+## 实现功能
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+*   **重复文件扫描：** 高效扫描指定目录下的重复文件，支持 MD5 哈希校验。
+*   **多平台支持：** 主要面向 macOS 和 Windows 桌面平台。
+*   **直观的用户界面：**
+    *   **三区布局：** 顶部控制区、左侧结果列表、右侧预览面板。
+    *   **可展开列表：** 左侧结果列表支持展开/折叠文件组，显示组内所有文件。
+    *   **智能预览：**
+        *   点击文件组的“预览”按钮，右侧面板显示该组所有图片/视频的网格概览。
+        *   点击展开组内的单个文件名，右侧面板会显示该文件的详细预览（图片或视频播放）。
+*   **文件管理：** 支持永久删除单个重复文件。
+*   **统计分析：** 提供重复文件数量、占用空间、文件类型分布、大小分布等统计数据。
+*   **国际化：** 支持中英文界面切换。
+*   **主题切换：** 支持亮色和暗色主题。
+*   **键盘快捷键：** 支持部分常用操作的键盘快捷键。
+*   **可调整面板：** 左侧文件列表面板宽度可拖拽调整。
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 技术栈
+
+*   **框架：** Flutter
+*   **语言：** Dart
+*   **状态管理：** `provider`
+*   **核心功能库：**
+    *   文件/目录选择：`file_picker`
+    *   文件系统操作：`dart:io`
+    *   MD5 哈希计算：`crypto`
+    *   视频播放：`video_player`
+    *   持久化存储：`shared_preferences`
+    *   动画：`flutter_staggered_animations`
+    *   滑动操作：`flutter_slidable`
+    *   徽章/标记：`badges`
+    *   路径处理：`path`
+*   **国际化：** `flutter_localizations` 结合 `intl` 包
+
+## 如何使用
+
+1.  **环境准备：**
+    *   确保已安装 Flutter SDK，并配置好 macOS 或 Windows 桌面开发环境。
+    *   安装 CocoaPods (macOS): `sudo gem install cocoapods`
+
+2.  **克隆项目：**
+    ```bash
+    git clone [你的项目仓库地址]
+    cd duplicate_file_scanner
+    ```
+
+3.  **获取依赖：**
+    ```bash
+    flutter pub get
+    ```
+
+4.  **生成国际化文件：**
+    ```bash
+    flutter gen-l10n
+    ```
+
+5.  **运行应用：**
+    *   **macOS:**
+        ```bash
+        flutter run -d macos
+        ```
+    *   **Windows:** (假设已启用 Windows 桌面支持)
+        ```bash
+        flutter run -d windows
+        ```
+
+6.  **使用说明：**
+    *   点击“选择目录”按钮选择要扫描的文件夹。
+    *   点击“扫描”按钮开始查找重复文件。
+    *   左侧面板会显示重复文件组列表。
+    *   点击文件组标题可展开/折叠该组。
+    *   点击文件组标题旁的“预览”图标，右侧面板会显示该组所有图片/视频的概览。
+    *   点击展开组内的单个文件名，右侧面板会显示该文件的详细预览。
+    *   在展开组内，每个文件旁有“删除”按钮，点击可永久删除文件。
+    *   右上角有统计信息和语言切换按钮。
