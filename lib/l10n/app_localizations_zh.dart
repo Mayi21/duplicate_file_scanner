@@ -73,4 +73,97 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chinese => '中文';
+
+  @override
+  String get statistics => '统计信息';
+
+  @override
+  String get noStatistics => '无统计数据。请先运行扫描。';
+
+  @override
+  String get overview => '概览';
+
+  @override
+  String get duplicateGroups => '重复文件组';
+
+  @override
+  String get duplicateFiles => '重复文件';
+
+  @override
+  String get wastedSpace => '浪费空间';
+
+  @override
+  String get selectedFiles => '已选择文件';
+
+  @override
+  String get fileTypeDistribution => '文件类型分布';
+
+  @override
+  String get sizeDistribution => '大小分布';
+
+  @override
+  String get topDuplicates => '热门重复';
+
+  @override
+  String get largestDuplicate => '最大重复文件';
+
+  @override
+  String get mostDuplicated => '最多重复文件';
+
+  @override
+  String get files => '个文件';
+
+  @override
+  String get copies => '份副本';
+
+  @override
+  String get selectAll => '全选';
+
+  @override
+  String get deselectAll => '取消全选';
+
+  @override
+  String get deleteSelected => '删除选中';
+
+  @override
+  String get moveToTrash => '移至废纸篓';
+
+  @override
+  String get pauseScan => '暂停扫描';
+
+  @override
+  String get resumeScan => '恢复扫描';
+
+  @override
+  String get stopScan => '停止扫描';
+
+  @override
+  String get filesScanned => '已扫描文件';
+
+  @override
+  String get estimatedTime => '预计时间';
+
+  @override
+  String get scanSpeed => '扫描速度';
+
+  @override
+  String get filesPerSecond => '文件/秒';
+
+  @override
+  String get remainingTime => '剩余时间';
+
+  @override
+  String get settings => '设置';
+
+  @override
+  String get about => '关于';
+
+  @override
+  String get help => '帮助';
+
+  @override
+  String get darkMode => '深色模式';
+
+  @override
+  String get lightMode => '浅色模式';
 }

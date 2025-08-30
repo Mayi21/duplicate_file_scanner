@@ -74,4 +74,98 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chinese => '中文';
+
+  @override
+  String get statistics => 'Statistics';
+
+  @override
+  String get noStatistics =>
+      'No statistics available. Please run a scan first.';
+
+  @override
+  String get overview => 'Overview';
+
+  @override
+  String get duplicateGroups => 'Duplicate Groups';
+
+  @override
+  String get duplicateFiles => 'Duplicate Files';
+
+  @override
+  String get wastedSpace => 'Wasted Space';
+
+  @override
+  String get selectedFiles => 'Selected Files';
+
+  @override
+  String get fileTypeDistribution => 'File Type Distribution';
+
+  @override
+  String get sizeDistribution => 'Size Distribution';
+
+  @override
+  String get topDuplicates => 'Top Duplicates';
+
+  @override
+  String get largestDuplicate => 'Largest Duplicate';
+
+  @override
+  String get mostDuplicated => 'Most Duplicated';
+
+  @override
+  String get files => 'files';
+
+  @override
+  String get copies => 'copies';
+
+  @override
+  String get selectAll => 'Select All';
+
+  @override
+  String get deselectAll => 'Deselect All';
+
+  @override
+  String get deleteSelected => 'Delete Selected';
+
+  @override
+  String get moveToTrash => 'Move to Trash';
+
+  @override
+  String get pauseScan => 'Pause Scan';
+
+  @override
+  String get resumeScan => 'Resume Scan';
+
+  @override
+  String get stopScan => 'Stop Scan';
+
+  @override
+  String get filesScanned => 'Files Scanned';
+
+  @override
+  String get estimatedTime => 'Estimated Time';
+
+  @override
+  String get scanSpeed => 'Scan Speed';
+
+  @override
+  String get filesPerSecond => 'files/sec';
+
+  @override
+  String get remainingTime => 'Remaining Time';
+
+  @override
+  String get settings => 'Settings';
+
+  @override
+  String get about => 'About';
+
+  @override
+  String get help => 'Help';
+
+  @override
+  String get darkMode => 'Dark Mode';
+
+  @override
+  String get lightMode => 'Light Mode';
 }

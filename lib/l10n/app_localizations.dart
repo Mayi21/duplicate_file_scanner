@@ -229,6 +229,192 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'中文'**
   String get chinese;
+
+  /// No description provided for @statistics.
+  ///
+  /// In en, this message translates to:
+  /// **'Statistics'**
+  String get statistics;
+
+  /// No description provided for @noStatistics.
+  ///
+  /// In en, this message translates to:
+  /// **'No statistics available. Please run a scan first.'**
+  String get noStatistics;
+
+  /// No description provided for @overview.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
+  String get overview;
+
+  /// No description provided for @duplicateGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate Groups'**
+  String get duplicateGroups;
+
+  /// No description provided for @duplicateFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate Files'**
+  String get duplicateFiles;
+
+  /// No description provided for @wastedSpace.
+  ///
+  /// In en, this message translates to:
+  /// **'Wasted Space'**
+  String get wastedSpace;
+
+  /// No description provided for @selectedFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected Files'**
+  String get selectedFiles;
+
+  /// No description provided for @fileTypeDistribution.
+  ///
+  /// In en, this message translates to:
+  /// **'File Type Distribution'**
+  String get fileTypeDistribution;
+
+  /// No description provided for @sizeDistribution.
+  ///
+  /// In en, this message translates to:
+  /// **'Size Distribution'**
+  String get sizeDistribution;
+
+  /// No description provided for @topDuplicates.
+  ///
+  /// In en, this message translates to:
+  /// **'Top Duplicates'**
+  String get topDuplicates;
+
+  /// No description provided for @largestDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Largest Duplicate'**
+  String get largestDuplicate;
+
+  /// No description provided for @mostDuplicated.
+  ///
+  /// In en, this message translates to:
+  /// **'Most Duplicated'**
+  String get mostDuplicated;
+
+  /// No description provided for @files.
+  ///
+  /// In en, this message translates to:
+  /// **'files'**
+  String get files;
+
+  /// No description provided for @copies.
+  ///
+  /// In en, this message translates to:
+  /// **'copies'**
+  String get copies;
+
+  /// No description provided for @selectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select All'**
+  String get selectAll;
+
+  /// No description provided for @deselectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Deselect All'**
+  String get deselectAll;
+
+  /// No description provided for @deleteSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Selected'**
+  String get deleteSelected;
+
+  /// No description provided for @moveToTrash.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to Trash'**
+  String get moveToTrash;
+
+  /// No description provided for @pauseScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause Scan'**
+  String get pauseScan;
+
+  /// No description provided for @resumeScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume Scan'**
+  String get resumeScan;
+
+  /// No description provided for @stopScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop Scan'**
+  String get stopScan;
+
+  /// No description provided for @filesScanned.
+  ///
+  /// In en, this message translates to:
+  /// **'Files Scanned'**
+  String get filesScanned;
+
+  /// No description provided for @estimatedTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated Time'**
+  String get estimatedTime;
+
+  /// No description provided for @scanSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan Speed'**
+  String get scanSpeed;
+
+  /// No description provided for @filesPerSecond.
+  ///
+  /// In en, this message translates to:
+  /// **'files/sec'**
+  String get filesPerSecond;
+
+  /// No description provided for @remainingTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining Time'**
+  String get remainingTime;
+
+  /// No description provided for @settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settings;
+
+  /// No description provided for @about.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get about;
+
+  /// No description provided for @help.
+  ///
+  /// In en, this message translates to:
+  /// **'Help'**
+  String get help;
+
+  /// No description provided for @darkMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark Mode'**
+  String get darkMode;
+
+  /// No description provided for @lightMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Light Mode'**
+  String get lightMode;
 }
 
 class _AppLocalizationsDelegate
