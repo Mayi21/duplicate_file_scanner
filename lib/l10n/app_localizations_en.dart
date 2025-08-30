@@ -168,4 +168,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lightMode => 'Light Mode';
+
+  @override
+  String get keepNewest => 'Keep Newest';
+
+  @override
+  String get keepOldest => 'Keep Oldest';
+
+  @override
+  String get keepLargest => 'Keep Largest';
+
+  @override
+  String get keepSmallest => 'Keep Smallest';
+
+  @override
+  String get comparing => 'Comparing';
+
+  @override
+  String get showInFinder => 'Show in Finder';
+
+  @override
+  String get keepThis => 'Keep This';
+
+  @override
+  String get smartTruncation => 'Smart file name truncation';
+
+  @override
+  String get thumbnailPreview => 'Thumbnail Preview';
+
+  @override
+  String get fileDetails => 'File Details';
+
+  @override
+  String get modified => 'Modified';
+
+  @override
+  String get folder => 'Folder';
+
+  @override
+  String get type => 'Type';
 }

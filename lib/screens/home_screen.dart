@@ -4,7 +4,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
 import 'package:badges/badges.dart' as badges;
 
@@ -14,8 +13,14 @@ import '../providers/language_provider.dart';
 import '../providers/statistics_provider.dart';
 import '../screens/statistics_screen.dart';
 import '../utils/file_type_helper.dart';
+import '../widgets/breadcrumb_navigator.dart';
+import '../widgets/batch_operation_toolbar.dart';
+import '../widgets/file_comparison_view.dart';
+import '../widgets/file_info_tile.dart';
 import '../widgets/preview_panel.dart';
 import 'video_preview_screen.dart';
+
+enum ViewMode { list, comparison, grid }
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -27,7 +32,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late AnimationController _animationController;
   final FocusNode _focusNode = FocusNode();
-  double _leftPanelWidth = 400;
+  double _leftPanelWidth = 450;
+  ViewMode _currentViewMode = ViewMode.list;
+  String? _comparisonGroupHash;
   
   @override
   void initState() {
@@ -54,10 +61,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       return Container(
         decoration: BoxDecoration(
           border: Border.all(color: Colors.grey[300]!),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
           child: Image.file(File(path), fit: BoxFit.contain),
         ),
       );
@@ -65,10 +79,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       return Container(
         decoration: BoxDecoration(
           border: Border.all(color: Colors.grey[300]!),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
           child: VideoPreviewScreen(videoPath: path),
         ),
       );
@@ -76,8 +97,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       return Container(
         decoration: BoxDecoration(
           border: Border.all(color: Colors.grey[300]!),
-          borderRadius: BorderRadius.circular(8),
-          color: Colors.grey[100],
+          borderRadius: BorderRadius.circular(12),
+          color: Colors.grey[50],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Center(
           child: Column(
@@ -120,47 +148,52 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         appBar: _buildAppBar(context, l10n, statisticsProvider),
         body: Column(
           children: [
-            _buildControlPanel(context, provider, l10n),
-            if (provider.isScanning) _buildProgressSection(context, provider, l10n),
+            _buildEnhancedControlPanel(context, provider, l10n),
+            if (provider.isScanning) _buildEnhancedProgressSection(context, provider, l10n),
+            _buildViewModeSelector(context, l10n),
             const Divider(height: 1),
             Expanded(
-              child: Row(
-                children: [
-                  // 左侧面板 - 文件列表
-                  SizedBox(
-                    width: _leftPanelWidth,
-                    child: _buildFileListPanel(context, provider, statisticsProvider, l10n),
-                  ),
-                  // 分割线 + 拖拽调整
-                  MouseRegion(
-                    cursor: SystemMouseCursors.resizeColumn,
-                    child: GestureDetector(
-                      onPanUpdate: (details) {
-                        setState(() {
-                          _leftPanelWidth = (_leftPanelWidth + details.delta.dx)
-                              .clamp(250.0, MediaQuery.of(context).size.width - 400);
-                        });
-                      },
-                      child: Container(
-                        width: 8,
-                        color: Colors.grey[300],
-                        child: Center(
+              child: _currentViewMode == ViewMode.comparison && _comparisonGroupHash != null
+                  ? _buildComparisonView(context, provider, l10n)
+                  : Row(
+                      children: [
+                        // 左侧面板 - 增强的文件列表
+                        Container(
+                          width: _leftPanelWidth,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.surface,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 4,
+                                offset: const Offset(2, 0),
+                              ),
+                            ],
+                          ),
+                          child: _buildEnhancedFileListPanel(context, provider, statisticsProvider, l10n),
+                        ),
+                        // 可拖拽分割线
+                        _buildResizableHandle(context),
+                        // 右侧面板 - 增强的预览
+                        Expanded(
                           child: Container(
-                            width: 2,
-                            height: 40,
-                            color: Colors.grey,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.surface,
+                            ),
+                            child: _buildEnhancedPreviewPanel(context, provider, l10n),
                           ),
                         ),
-                      ),
+                      ],
                     ),
-                  ),
-                  // 右侧面板 - 预览
-                  Expanded(
-                    child: _buildPreviewPanel(context, provider, l10n),
-                  ),
-                ],
-              ),
             ),
+            // 批量操作工具栏
+            if (statisticsProvider.totalSelectedFiles > 0 || provider.duplicateFiles.isNotEmpty)
+              BatchOperationToolbar(
+                selectedCount: statisticsProvider.totalSelectedFiles,
+                totalCount: statisticsProvider.totalDuplicateFiles,
+                onAction: (action) => _handleBatchAction(action, provider, statisticsProvider, l10n),
+                isEnabled: !provider.isScanning,
+              ),
           ],
         ),
       ),
@@ -169,9 +202,30 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   AppBar _buildAppBar(BuildContext context, AppLocalizations l10n, StatisticsProvider stats) {
     return AppBar(
-      title: Text(l10n.appTitle),
+      title: Row(
+        children: [
+          Text(l10n.appTitle),
+          const SizedBox(width: 16),
+          // 当前语言指示器
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              Provider.of<LanguageProvider>(context).locale.languageCode.toUpperCase(),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
       actions: [
-        // 统计信息按钮
+        // 统计信息按钮 - 带徽章
         badges.Badge(
           badgeContent: Text(
             '${stats.totalDuplicateGroups}',
@@ -179,7 +233,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
           showBadge: stats.totalDuplicateGroups > 0,
           child: IconButton(
-            icon: const Icon(Icons.analytics),
+            icon: const Icon(Icons.analytics_outlined),
             onPressed: () {
               Navigator.push(
                 context,
@@ -188,6 +242,39 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             },
             tooltip: l10n.statistics,
           ),
+        ),
+        // 视图模式切换
+        PopupMenuButton<ViewMode>(
+          icon: const Icon(Icons.view_module_outlined),
+          onSelected: (mode) {
+            setState(() {
+              _currentViewMode = mode;
+            });
+          },
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              value: ViewMode.list,
+              child: Row(
+                children: [
+                  Icon(Icons.list, 
+                    color: _currentViewMode == ViewMode.list ? Theme.of(context).colorScheme.primary : null),
+                  const SizedBox(width: 8),
+                  const Text('List View'),
+                ],
+              ),
+            ),
+            PopupMenuItem(
+              value: ViewMode.comparison,
+              child: Row(
+                children: [
+                  Icon(Icons.compare_arrows,
+                    color: _currentViewMode == ViewMode.comparison ? Theme.of(context).colorScheme.primary : null),
+                  const SizedBox(width: 8),
+                  const Text('Comparison View'),
+                ],
+              ),
+            ),
+          ],
         ),
         // 语言切换
         PopupMenuButton<String>(
@@ -203,6 +290,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   const Icon(Icons.language),
                   const SizedBox(width: 8),
                   Text(l10n.english),
+                  const Spacer(),
+                  if (Provider.of<LanguageProvider>(context, listen: false).locale.languageCode == 'en')
+                    const Icon(Icons.check, color: Colors.green),
                 ],
               ),
             ),
@@ -213,21 +303,25 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   const Icon(Icons.language),
                   const SizedBox(width: 8),
                   Text(l10n.chinese),
+                  const Spacer(),
+                  if (Provider.of<LanguageProvider>(context, listen: false).locale.languageCode == 'zh')
+                    const Icon(Icons.check, color: Colors.green),
                 ],
               ),
             ),
           ],
           tooltip: l10n.language,
-          child: const Icon(Icons.language),
+          child: const Icon(Icons.translate),
         ),
         const SizedBox(width: 8),
       ],
     );
   }
 
-  Widget _buildControlPanel(BuildContext context, FileScannerProvider provider, AppLocalizations l10n) {
+  Widget _buildEnhancedControlPanel(BuildContext context, FileScannerProvider provider, AppLocalizations l10n) {
     return Card(
       margin: const EdgeInsets.all(16),
+      elevation: 2,
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -237,7 +331,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
-                    icon: const Icon(Icons.folder_open),
+                    icon: const Icon(Icons.folder_open_outlined),
                     onPressed: provider.isScanning ? null : () async {
                       final path = await FilePicker.platform.getDirectoryPath();
                       if (path != null) {
@@ -247,13 +341,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     label: Text(l10n.selectDirectory),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 2,
                     ),
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: ElevatedButton.icon(
-                    icon: Icon(provider.isScanning ? Icons.pause : Icons.search),
+                    icon: Icon(provider.isScanning ? Icons.pause_circle_outline : Icons.search_outlined),
                     onPressed: (provider.selectedDirectory == null)
                         ? null
                         : () {
@@ -266,27 +362,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     label: Text(provider.isScanning ? l10n.pauseScan : l10n.scan),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 2,
+                      backgroundColor: provider.isScanning ? Colors.orange : null,
                     ),
                   ),
                 ),
               ],
             ),
             if (provider.selectedDirectory != null) ...[
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Icon(Icons.folder, size: 16, color: Colors.grey[600]),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      "${l10n.selected}: ${provider.selectedDirectory!.path}",
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
+              const SizedBox(height: 16),
+              // 面包屑导航
+              BreadcrumbNavigator(
+                currentPath: provider.selectedDirectory?.path,
+                onPathSelected: (path) {
+                  provider.setDirectory(Directory(path));
+                },
               ),
             ],
           ],
@@ -295,9 +386,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildProgressSection(BuildContext context, FileScannerProvider provider, AppLocalizations l10n) {
+  Widget _buildEnhancedProgressSection(BuildContext context, FileScannerProvider provider, AppLocalizations l10n) {
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      elevation: 2,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -305,56 +397,80 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             Row(
               children: [
                 Expanded(
+                  flex: 3,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        l10n.scanning,
-                        style: Theme.of(context).textTheme.titleMedium,
+                      Row(
+                        children: [
+                          SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 3,
+                              value: provider.progress,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            l10n.scanning,
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            "${(provider.progress * 100).toStringAsFixed(1)}%",
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 8),
                       LinearProgressIndicator(
                         value: provider.progress,
                         backgroundColor: Colors.grey[300],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        "${(provider.progress * 100).toStringAsFixed(1)}%",
-                        style: Theme.of(context).textTheme.bodySmall,
+                        borderRadius: BorderRadius.circular(4),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 24),
+                // 统计信息
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(
-                      l10n.filesScanned,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    Text(
-                      "0", // TODO: 实现文件计数
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
+                    _buildStatItem(context, l10n.filesScanned, "0", Icons.description_outlined),
+                    _buildStatItem(context, l10n.duplicateGroups, "${provider.duplicateFiles.length}", Icons.group_outlined),
                   ],
                 ),
               ],
             ),
             if (provider.currentFilePath.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(Icons.description, size: 16, color: Colors.grey[600]),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      provider.currentFilePath,
-                      style: Theme.of(context).textTheme.bodySmall,
-                      overflow: TextOverflow.ellipsis,
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.description_outlined, size: 16, color: Colors.grey[600]),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        provider.currentFilePath.split('/').last,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ],
@@ -363,39 +479,88 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildFileListPanel(
+  Widget _buildStatItem(BuildContext context, String label, String value, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: Colors.grey[600]),
+          const SizedBox(width: 4),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                value,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildViewModeSelector(BuildContext context, AppLocalizations l10n) {
+    if (_currentViewMode != ViewMode.comparison) return const SizedBox.shrink();
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: Colors.blue[50],
+      child: Row(
+        children: [
+          Icon(Icons.compare_arrows, color: Colors.blue[700]),
+          const SizedBox(width: 8),
+          Text(
+            'Comparison Mode',
+            style: TextStyle(
+              color: Colors.blue[700],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const Spacer(),
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _currentViewMode = ViewMode.list;
+                _comparisonGroupHash = null;
+              });
+            },
+            child: const Text('Exit Comparison'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEnhancedFileListPanel(
     BuildContext context,
     FileScannerProvider provider,
     StatisticsProvider stats,
     AppLocalizations l10n,
   ) {
     if (provider.duplicateFiles.isEmpty && !provider.isScanning) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.search, size: 64, color: Colors.grey[400]),
-            const SizedBox(height: 16),
-            Text(
-              l10n.selectGroupOrFile,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Colors.grey[600],
-              ),
-            ),
-          ],
-        ),
-      );
+      return _buildEmptyState(context, l10n);
     }
 
     return Column(
       children: [
-        // 工具栏
-        if (provider.duplicateFiles.isNotEmpty) _buildListToolbar(context, provider, stats, l10n),
+        // 增强的工具栏
+        if (provider.duplicateFiles.isNotEmpty) _buildEnhancedListToolbar(context, provider, stats, l10n),
         const Divider(height: 1),
         // 文件列表
         Expanded(
           child: AnimationLimiter(
             child: ListView.builder(
+              padding: const EdgeInsets.all(8),
               itemCount: provider.duplicateFiles.length,
               itemBuilder: (context, index) {
                 final group = provider.duplicateFiles[index];
@@ -405,7 +570,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   child: SlideAnimation(
                     verticalOffset: 50.0,
                     child: FadeInAnimation(
-                      child: _buildFileGroupTile(context, group, provider, stats, l10n),
+                      child: _buildEnhancedFileGroupTile(context, group, provider, stats, l10n),
                     ),
                   ),
                 );
@@ -417,37 +582,91 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildListToolbar(
+  Widget _buildEmptyState(BuildContext context, AppLocalizations l10n) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.search_outlined,
+            size: 80,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No duplicates found',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.selectGroupOrFile,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Colors.grey[500],
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEnhancedListToolbar(
     BuildContext context,
     FileScannerProvider provider,
     StatisticsProvider stats,
     AppLocalizations l10n,
   ) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: Colors.grey[50],
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+        border: Border(
+          bottom: BorderSide(color: Colors.grey[300]!),
+        ),
+      ),
       child: Row(
         children: [
+          Icon(Icons.group_outlined, size: 18, color: Colors.grey[700]),
+          const SizedBox(width: 8),
           Text(
             "${provider.duplicateFiles.length} ${l10n.duplicateGroups}",
-            style: Theme.of(context).textTheme.bodySmall,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
-          const Spacer(),
-          if (stats.totalSelectedFiles > 0) ...[
-            Text(
-              "${stats.totalSelectedFiles} ${l10n.selectedFiles}",
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.blue,
+          const SizedBox(width: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.orange[100],
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              "${stats.totalDuplicateFiles} ${l10n.files}",
+              style: TextStyle(
+                color: Colors.orange[800],
+                fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(width: 8),
-            TextButton.icon(
-              icon: const Icon(Icons.delete, size: 16),
-              label: Text(l10n.deleteSelected),
-              onPressed: () => _deleteSelectedFiles(context, stats, l10n),
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.red,
+          ),
+          const Spacer(),
+          if (stats.totalSelectedFiles > 0) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.blue[100],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                "${stats.totalSelectedFiles} ${l10n.selectedFiles}",
+                style: TextStyle(
+                  color: Colors.blue[800],
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
@@ -456,7 +675,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildFileGroupTile(
+  Widget _buildEnhancedFileGroupTile(
     BuildContext context,
     dynamic group,
     FileScannerProvider provider,
@@ -466,49 +685,99 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final selectedFiles = stats.getSelectedFilesInGroup(group.hash);
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      elevation: 1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ExpansionTile(
         key: PageStorageKey(group.hash),
-        leading: CircleAvatar(
-          backgroundColor: FileTypeHelper.getFileColor(group.paths.first),
-          child: Text(
-            "${group.paths.length}",
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-          ),
-        ),
-        title: Row(
+        leading: Stack(
           children: [
-            Icon(
-              FileTypeHelper.getFileIcon(group.paths.first),
-              color: FileTypeHelper.getFileColor(group.paths.first),
+            CircleAvatar(
+              radius: 20,
+              backgroundColor: FileTypeHelper.getFileColor(group.paths.first).withOpacity(0.1),
+              child: Icon(
+                FileTypeHelper.getFileIcon(group.paths.first),
+                color: FileTypeHelper.getFileColor(group.paths.first),
+              ),
             ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                "${FileTypeHelper.getFileType(group.paths.first)} • ${FileTypeHelper.formatFileSize(group.size)}",
-                style: Theme.of(context).textTheme.titleSmall,
+            if (selectedFiles.isNotEmpty)
+              Positioned(
+                top: 0,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: const BoxDecoration(
+                    color: Colors.green,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    '${selectedFiles.length}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    "${FileTypeHelper.getFileType(group.paths.first)} • ${FileTypeHelper.formatFileSize(group.size)}",
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    "${group.paths.length}",
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 2),
+            Text(
+              _getGroupFolderInfo(group.paths),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Colors.grey[600],
               ),
             ),
           ],
         ),
-        subtitle: Text(
-          "${l10n.hash}: ${group.hash.substring(0, 10)}...",
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (selectedFiles.isNotEmpty)
-              badges.Badge(
-                badgeContent: Text(
-                  '${selectedFiles.length}',
-                  style: const TextStyle(color: Colors.white, fontSize: 10),
-                ),
-                child: Icon(Icons.check_circle, color: Colors.green),
-              ),
             IconButton(
-              icon: const Icon(Icons.preview),
+              icon: const Icon(Icons.compare_arrows_outlined),
+              onPressed: () {
+                setState(() {
+                  _currentViewMode = ViewMode.comparison;
+                  _comparisonGroupHash = group.hash;
+                });
+              },
+              tooltip: 'Compare files',
+            ),
+            IconButton(
+              icon: const Icon(Icons.visibility_outlined),
               onPressed: () => provider.selectGroupForPreview(group),
+              tooltip: l10n.preview,
             ),
           ],
         ),
@@ -518,111 +787,112 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           }
         },
         children: group.paths.map<Widget>((path) {
-          final isSelected = stats.isFileSelected(group.hash, path);
-          return Slidable(
-            key: Key(path),
-            endActionPane: ActionPane(
-              motion: const ScrollMotion(),
-              children: [
-                SlidableAction(
-                  onPressed: (_) => _deleteFile(context, group, path, provider, l10n),
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                  icon: Icons.delete,
-                  label: l10n.delete,
-                ),
-              ],
-            ),
-            child: ListTile(
-              selected: provider.fileForPreview == path,
-              contentPadding: const EdgeInsets.only(left: 48, right: 16),
-              leading: Checkbox(
-                value: isSelected,
-                onChanged: (value) {
-                  stats.toggleFileSelection(group.hash, path);
-                },
-              ),
-              title: Text(
-                path.split('/').last,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              subtitle: Text(
-                path,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              trailing: PopupMenuButton(
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    child: Row(
-                      children: [
-                        const Icon(Icons.visibility),
-                        const SizedBox(width: 8),
-                        Text(l10n.preview),
-                      ],
-                    ),
-                    onTap: () => provider.selectFileForPreview(path),
-                  ),
-                  PopupMenuItem(
-                    child: Row(
-                      children: [
-                        const Icon(Icons.delete, color: Colors.red),
-                        const SizedBox(width: 8),
-                        Text(l10n.delete, style: const TextStyle(color: Colors.red)),
-                      ],
-                    ),
-                    onTap: () => _deleteFile(context, group, path, provider, l10n),
-                  ),
-                ],
-              ),
-              onTap: () => provider.selectFileForPreview(path),
-            ),
+          final file = File(path);
+          final fileStats = file.existsSync() ? file.statSync() : null;
+          
+          return FileInfoTile(
+            filePath: path,
+            lastModified: fileStats?.modified,
+            fileSize: fileStats?.size,
+            isSelected: stats.isFileSelected(group.hash, path),
+            onTap: () => provider.selectFileForPreview(path),
+            onSelectionChanged: () => stats.toggleFileSelection(group.hash, path),
           );
         }).toList(),
       ),
     );
   }
 
-  Widget _buildPreviewPanel(BuildContext context, FileScannerProvider provider, AppLocalizations l10n) {
-    return Card(
-      margin: const EdgeInsets.all(8),
+  String _getGroupFolderInfo(List<String> paths) {
+    final folders = paths.map((path) => path.split('/').reversed.skip(1).first).toSet();
+    if (folders.length == 1) {
+      return "in ${folders.first}";
+    } else {
+      return "in ${folders.length} folders";
+    }
+  }
+
+  Widget _buildResizableHandle(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.resizeColumn,
+      child: GestureDetector(
+        onPanUpdate: (details) {
+          setState(() {
+            _leftPanelWidth = (_leftPanelWidth + details.delta.dx)
+                .clamp(300.0, MediaQuery.of(context).size.width - 300);
+          });
+        },
+        child: Container(
+          width: 8,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.transparent, Colors.grey[300]!, Colors.transparent],
+              stops: const [0.0, 0.5, 1.0],
+            ),
+          ),
+          child: Center(
+            child: Container(
+              width: 2,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.grey[400],
+                borderRadius: BorderRadius.circular(1),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEnhancedPreviewPanel(BuildContext context, FileScannerProvider provider, AppLocalizations l10n) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(
+          left: BorderSide(color: Colors.grey[300]!),
+        ),
+      ),
       child: Column(
         children: [
           // 预览工具栏
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.grey[50],
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(8),
-                topRight: Radius.circular(8),
+              color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+              border: Border(
+                bottom: BorderSide(color: Colors.grey[300]!),
               ),
             ),
             child: Row(
               children: [
-                Icon(Icons.visibility, color: Colors.grey[600]),
+                Icon(Icons.visibility_outlined, color: Colors.grey[700]),
                 const SizedBox(width: 8),
                 Text(
                   l10n.preview,
-                  style: Theme.of(context).textTheme.titleMedium,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const Spacer(),
                 if (provider.fileForPreview != null) ...[
                   IconButton(
-                    icon: const Icon(Icons.open_in_new),
+                    icon: const Icon(Icons.open_in_new_outlined),
                     onPressed: () {
                       // TODO: 打开文件所在目录
                     },
-                    tooltip: "Open in Finder",
+                    tooltip: l10n.showInFinder,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.fullscreen_outlined),
+                    onPressed: () {
+                      // TODO: 全屏预览
+                    },
+                    tooltip: "Full Screen",
                   ),
                 ],
               ],
             ),
           ),
-          const Divider(height: 1),
           // 预览内容
           Expanded(
             child: provider.fileForPreview != null
@@ -632,24 +902,52 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   )
                 : (provider.groupForPreview != null
                     ? PreviewPanel(fileGroup: provider.groupForPreview!)
-                    : Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.preview, size: 64, color: Colors.grey[400]),
-                            const SizedBox(height: 16),
-                            Text(
-                              l10n.selectGroupOrFile,
-                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                      )),
+                    : _buildEmptyPreviewState(context, l10n)),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildEmptyPreviewState(BuildContext context, AppLocalizations l10n) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.preview_outlined,
+            size: 80,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            l10n.selectGroupOrFile,
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: Colors.grey[600],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildComparisonView(BuildContext context, FileScannerProvider provider, AppLocalizations l10n) {
+    final group = provider.duplicateFiles.cast<dynamic>().firstWhere(
+      (g) => g.hash == _comparisonGroupHash,
+      orElse: () => null,
+    );
+    
+    if (group == null) {
+      return Center(
+        child: Text('Comparison group not found'),
+      );
+    }
+
+    return FileComparisonView(
+      filePaths: group.paths,
+      onFileSelected: (path) {
+        provider.selectFileForPreview(path);
+      },
     );
   }
 
@@ -657,7 +955,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     if (event is KeyDownEvent) {
       // Delete键删除选中的文件
       if (event.logicalKey == LogicalKeyboardKey.delete && stats.totalSelectedFiles > 0) {
-        _deleteSelectedFiles(context, stats, l10n);
+        _handleBatchAction(BatchAction.deleteSelected, provider, stats, l10n);
       }
       // Escape键取消选择
       else if (event.logicalKey == LogicalKeyboardKey.escape) {
@@ -666,66 +964,140 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       // Ctrl+A全选
       else if (event.logicalKey == LogicalKeyboardKey.keyA && 
                HardwareKeyboard.instance.isControlPressed) {
-        // TODO: 实现全选功能
+        _handleBatchAction(BatchAction.selectAll, provider, stats, l10n);
       }
     }
   }
 
-  void _deleteFile(
-    BuildContext context,
-    dynamic group,
-    String path,
-    FileScannerProvider provider,
-    AppLocalizations l10n,
-  ) {
+  void _handleBatchAction(BatchAction action, FileScannerProvider provider, StatisticsProvider stats, AppLocalizations l10n) {
+    switch (action) {
+      case BatchAction.selectAll:
+        // TODO: 实现全选所有文件
+        break;
+      case BatchAction.deselectAll:
+        stats.clearAllSelections();
+        break;
+      case BatchAction.keepNewest:
+        // TODO: 实现保留最新文件逻辑
+        _showNotImplementedSnackBar(context, l10n.keepNewest);
+        break;
+      case BatchAction.keepOldest:
+        // TODO: 实现保留最旧文件逻辑
+        _showNotImplementedSnackBar(context, l10n.keepOldest);
+        break;
+      case BatchAction.keepLargest:
+        // TODO: 实现保留最大文件逻辑
+        _showNotImplementedSnackBar(context, l10n.keepLargest);
+        break;
+      case BatchAction.keepSmallest:
+        // TODO: 实现保留最小文件逻辑
+        _showNotImplementedSnackBar(context, l10n.keepSmallest);
+        break;
+      case BatchAction.deleteSelected:
+        _showDeleteConfirmation(context, stats, l10n);
+        break;
+      case BatchAction.moveToTrash:
+        _showMoveToTrashConfirmation(context, stats, l10n);
+        break;
+    }
+  }
+
+  void _showNotImplementedSnackBar(BuildContext context, String feature) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('$feature - Coming Soon!'),
+        backgroundColor: Colors.orange,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context, StatisticsProvider stats, AppLocalizations l10n) {
+    final selectedFiles = stats.getAllSelectedFiles();
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(l10n.deleteFile),
-        content: Text("${l10n.deleteConfirmation}\n\n$path"),
+        title: Row(
+          children: [
+            const Icon(Icons.delete_forever, color: Colors.red),
+            const SizedBox(width: 8),
+            Text(l10n.deleteSelected),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("${l10n.deleteConfirmation}\n"),
+            Text(
+              "${selectedFiles.length} ${l10n.files}",
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "⚠️ This action cannot be undone!",
+              style: TextStyle(color: Colors.red[700], fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: Text(l10n.cancel),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () {
-              try {
-                File(path).deleteSync();
-                provider.removeFileFromGroup(group.hash, path);
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("${l10n.errorDeletingFile}: $e")),
-                );
-              }
+              // TODO: 实现批量删除
               Navigator.of(context).pop();
+              _showNotImplementedSnackBar(context, l10n.deleteSelected);
             },
-            child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: Text(l10n.delete, style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),
     );
   }
 
-  void _deleteSelectedFiles(BuildContext context, StatisticsProvider stats, AppLocalizations l10n) {
+  void _showMoveToTrashConfirmation(BuildContext context, StatisticsProvider stats, AppLocalizations l10n) {
     final selectedFiles = stats.getAllSelectedFiles();
     
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(l10n.deleteSelected),
-        content: Text("${l10n.deleteConfirmation}\n\n${selectedFiles.length} ${l10n.files}"),
+        title: Row(
+          children: [
+            const Icon(Icons.delete_outline, color: Colors.orange),
+            const SizedBox(width: 8),
+            Text(l10n.moveToTrash),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Move ${selectedFiles.length} ${l10n.files} to trash?"),
+            const SizedBox(height: 8),
+            Text(
+              "You can restore them from trash later.",
+              style: TextStyle(color: Colors.grey[600]),
+            ),
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: Text(l10n.cancel),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () {
-              // TODO: 实现批量删除
+              // TODO: 实现移至回收站
               Navigator.of(context).pop();
+              _showNotImplementedSnackBar(context, l10n.moveToTrash);
             },
-            child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+            child: Text(l10n.moveToTrash, style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),

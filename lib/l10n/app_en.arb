@@ -51,5 +51,19 @@
   "about": "About",
   "help": "Help",
   "darkMode": "Dark Mode",
-  "lightMode": "Light Mode"
+  "lightMode": "Light Mode",
+  "keepNewest": "Keep Newest",
+  "keepOldest": "Keep Oldest", 
+  "keepLargest": "Keep Largest",
+  "keepSmallest": "Keep Smallest",
+  "comparing": "Comparing",
+  "showInFinder": "Show in Finder",
+  "keepThis": "Keep This",
+  "smartTruncation": "Smart file name truncation",
+  "thumbnailPreview": "Thumbnail Preview",
+  "fileDetails": "File Details",
+  "modified": "Modified",
+  "folder": "Folder",
+  "type": "Type",
+  "comparing": "Comparing"
 }

@@ -51,5 +51,19 @@
   "about": "关于",
   "help": "帮助",
   "darkMode": "深色模式",
-  "lightMode": "浅色模式"
+  "lightMode": "浅色模式",
+  "keepNewest": "保留最新",
+  "keepOldest": "保留最旧", 
+  "keepLargest": "保留最大",
+  "keepSmallest": "保留最小",
+  "comparing": "对比中",
+  "showInFinder": "在访达中显示",
+  "keepThis": "保留此文件",
+  "smartTruncation": "智能文件名截断",
+  "thumbnailPreview": "缩略图预览",
+  "fileDetails": "文件详情",
+  "modified": "修改时间",
+  "folder": "文件夹",
+  "type": "类型",
+  "comparing": "正在对比"
 }

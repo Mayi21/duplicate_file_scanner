@@ -166,4 +166,43 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get lightMode => '浅色模式';
+
+  @override
+  String get keepNewest => '保留最新';
+
+  @override
+  String get keepOldest => '保留最旧';
+
+  @override
+  String get keepLargest => '保留最大';
+
+  @override
+  String get keepSmallest => '保留最小';
+
+  @override
+  String get comparing => '正在对比';
+
+  @override
+  String get showInFinder => '在访达中显示';
+
+  @override
+  String get keepThis => '保留此文件';
+
+  @override
+  String get smartTruncation => '智能文件名截断';
+
+  @override
+  String get thumbnailPreview => '缩略图预览';
+
+  @override
+  String get fileDetails => '文件详情';
+
+  @override
+  String get modified => '修改时间';
+
+  @override
+  String get folder => '文件夹';
+
+  @override
+  String get type => '类型';
 }

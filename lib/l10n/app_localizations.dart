@@ -415,6 +415,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Light Mode'**
   String get lightMode;
+
+  /// No description provided for @keepNewest.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Newest'**
+  String get keepNewest;
+
+  /// No description provided for @keepOldest.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Oldest'**
+  String get keepOldest;
+
+  /// No description provided for @keepLargest.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Largest'**
+  String get keepLargest;
+
+  /// No description provided for @keepSmallest.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Smallest'**
+  String get keepSmallest;
+
+  /// No description provided for @comparing.
+  ///
+  /// In en, this message translates to:
+  /// **'Comparing'**
+  String get comparing;
+
+  /// No description provided for @showInFinder.
+  ///
+  /// In en, this message translates to:
+  /// **'Show in Finder'**
+  String get showInFinder;
+
+  /// No description provided for @keepThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep This'**
+  String get keepThis;
+
+  /// No description provided for @smartTruncation.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart file name truncation'**
+  String get smartTruncation;
+
+  /// No description provided for @thumbnailPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Thumbnail Preview'**
+  String get thumbnailPreview;
+
+  /// No description provided for @fileDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'File Details'**
+  String get fileDetails;
+
+  /// No description provided for @modified.
+  ///
+  /// In en, this message translates to:
+  /// **'Modified'**
+  String get modified;
+
+  /// No description provided for @folder.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder'**
+  String get folder;
+
+  /// No description provided for @type.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get type;
 }
 
 class _AppLocalizationsDelegate
