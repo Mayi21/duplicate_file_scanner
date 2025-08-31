@@ -260,4 +260,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String filesMovedToTrash(int count) {
     return '$count files have been moved to trash.';
   }
+
+  @override
+  String get permissionErrorMoveToTrash =>
+      'Permission Denied. To fix this, go to System Settings > Privacy & Security > Automation, find \'Duplicate File Scanner\', and enable \'Finder\'.';
 }

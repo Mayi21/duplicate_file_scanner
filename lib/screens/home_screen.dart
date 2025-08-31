@@ -1044,29 +1044,27 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
           ElevatedButton(
             onPressed: () async {
+              final scaffoldMessenger = ScaffoldMessenger.of(context);
+              final l10n = AppLocalizations.of(context)!;
               Navigator.of(context).pop();
               try {
                 final selectedFiles = stats.getAllSelectedFiles();
                 await stats.deleteSelectedFiles();
                 provider.removeFiles(selectedFiles);
 
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.filesDeleted(selectedFiles.length)),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                }
+                scaffoldMessenger.showSnackBar(
+                  SnackBar(
+                    content: Text(l10n.filesDeleted(selectedFiles.length)),
+                    backgroundColor: Colors.green,
+                  ),
+                );
               } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('${l10n.errorDeletingFile}: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
+                scaffoldMessenger.showSnackBar(
+                  SnackBar(
+                    content: Text('${l10n.errorDeletingFile}: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
@@ -1109,24 +1107,33 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
           ElevatedButton(
             onPressed: () async {
+              final scaffoldMessenger = ScaffoldMessenger.of(context);
+              final l10n = AppLocalizations.of(context)!;
               Navigator.of(context).pop();
               try {
                 final selectedFiles = stats.getAllSelectedFiles();
                 await stats.moveSelectedFilesToTrash();
                 provider.removeFiles(selectedFiles);
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+
+                scaffoldMessenger.showSnackBar(
+                  SnackBar(
+                    content: Text(l10n.filesMovedToTrash(selectedFiles.length)),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              } catch (e) {
+                final errorMessage = e.toString();
+                if (errorMessage.contains('(-10004)')) {
+                  scaffoldMessenger.showSnackBar(
                     SnackBar(
-                      content: Text(l10n.filesMovedToTrash(selectedFiles.length)),
-                      backgroundColor: Colors.green,
+                      content: Text(l10n.permissionErrorMoveToTrash),
+                      backgroundColor: Colors.red,
                     ),
                   );
-                }
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                } else {
+                  scaffoldMessenger.showSnackBar(
                     SnackBar(
-                      content: Text('${l10n.error}: $e'),
+                      content: Text('${l10n.error}: $errorMessage'),
                       backgroundColor: Colors.red,
                     ),
                   );

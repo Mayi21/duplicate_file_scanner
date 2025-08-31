@@ -583,6 +583,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} files have been moved to trash.'**
   String filesMovedToTrash(int count);
+
+  /// No description provided for @permissionErrorMoveToTrash.
+  ///
+  /// In en, this message translates to:
+  /// **'Permission Denied. To fix this, go to System Settings > Privacy & Security > Automation, find \'Duplicate File Scanner\', and enable \'Finder\'.'**
+  String get permissionErrorMoveToTrash;
 }
 
 class _AppLocalizationsDelegate

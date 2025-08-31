@@ -258,4 +258,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String filesMovedToTrash(int count) {
     return '$count 个文件已被移至废纸篓。';
   }
+
+  @override
+  String get permissionErrorMoveToTrash =>
+      '权限不足。请前往“系统设置 > 隐私与安全性 > 自动化”，找到“Duplicate File Scanner”，并勾选“访达”（Finder）以授予权限。';
 }
