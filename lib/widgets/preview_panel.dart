@@ -5,12 +5,14 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/file_model.dart';
+import '../services/file_operation_service.dart';
 import '../utils/file_type_helper.dart';
 
 class PreviewPanel extends StatelessWidget {
   final FileGroup fileGroup;
+  final Function(String) onFileTap;
 
-  const PreviewPanel({super.key, required this.fileGroup});
+  const PreviewPanel({super.key, required this.fileGroup, required this.onFileTap});
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +26,7 @@ class PreviewPanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 组信息卡片
+          // Group info card
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -89,7 +91,7 @@ class PreviewPanel extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          // 预览网格
+          // Preview grid
           if (previewablePaths.isNotEmpty) ...[
             Text(
               "${l10n.preview} (${previewablePaths.length}/${fileGroup.paths.length})",
@@ -114,7 +116,7 @@ class PreviewPanel extends StatelessWidget {
                       columnCount: _calculateCrossAxisCount(context),
                       child: ScaleAnimation(
                         child: FadeInAnimation(
-                          child: _buildPreviewTile(context, path, index),
+                          child: _buildPreviewTile(context, path, index, l10n),
                         ),
                       ),
                     );
@@ -164,88 +166,103 @@ class PreviewPanel extends StatelessWidget {
     return 2;
   }
 
-  Widget _buildPreviewTile(BuildContext context, String path, int index) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          if (FileTypeHelper.isImageFile(path))
-            Image.file(
-              File(path),
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  color: Colors.grey[200],
+  Widget _buildPreviewTile(BuildContext context, String path, int index, AppLocalizations l10n) {
+    return GestureDetector(
+      onTap: () => onFileTap(path),
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (FileTypeHelper.isImageFile(path))
+              Image.file(
+                File(path),
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: Colors.grey[200],
+                    child: Icon(
+                      Icons.broken_image,
+                      size: 32,
+                      color: Colors.grey[400],
+                    ),
+                  );
+                },
+              )
+            else if (FileTypeHelper.isVideoFile(path))
+              Container(
+                color: Colors.black87,
+                child: const Center(
                   child: Icon(
-                    Icons.broken_image,
-                    size: 32,
-                    color: Colors.grey[400],
+                    Icons.play_circle_filled,
+                    size: 48,
+                    color: Colors.white,
                   ),
-                );
-              },
-            )
-          else if (FileTypeHelper.isVideoFile(path))
-            Container(
-              color: Colors.black87,
-              child: const Center(
-                child: Icon(
-                  Icons.play_circle_filled,
-                  size: 48,
-                  color: Colors.white,
                 ),
               ),
-            ),
-          // 覆盖层显示文件名
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withOpacity(0.7),
+            // Overlay with file name and actions
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.8),
+                    ],
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        path.split('/').last,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (FileTypeHelper.isImageFile(path))
+                      IconButton(
+                        icon: const Icon(Icons.fullscreen, color: Colors.white, size: 18),
+                        onPressed: () => onFileTap(path), // Triggers full screen in home_screen
+                        tooltip: l10n.fullScreen,
+                      ),
                   ],
                 ),
               ),
-              child: Text(
-                path.split('/').last,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
             ),
-          ),
-          // 索引标识
-          Positioned(
-            top: 8,
-            right: 8,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.black54,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                '${index + 1}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
+            // Index indicator
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '${index + 1}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

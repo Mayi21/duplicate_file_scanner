@@ -13,7 +13,6 @@
   "preview": "Preview",
   "delete": "Delete",
   "deleteFile": "Delete File?",
-  "deleteConfirmation": "Are you sure you want to permanently delete this file?",
   "cancel": "Cancel",
   "selectGroupOrFile": "Select a group or file to preview",
   "noPreviewAvailable": "No preview available for this file type",
@@ -53,9 +52,7 @@
   "darkMode": "Dark Mode",
   "lightMode": "Light Mode",
   "keepNewest": "Keep Newest",
-  "keepOldest": "Keep Oldest", 
-  "keepLargest": "Keep Largest",
-  "keepSmallest": "Keep Smallest",
+  "keepOldest": "Keep Oldest",
   "comparing": "Comparing",
   "showInFinder": "Show in Finder",
   "keepThis": "Keep This",
@@ -65,5 +62,50 @@
   "modified": "Modified",
   "folder": "Folder",
   "type": "Type",
-  "comparing": "Comparing"
+  "fullScreen": "Full Screen",
+  "exitFullScreen": "Exit Full Screen",
+  "listView": "List View",
+  "comparisonView": "Comparison View",
+  "exitComparison": "Exit Comparison",
+  "comparisonMode": "Comparison Mode",
+  "compareFiles": "Compare Files",
+  "noDuplicatesFound": "No duplicates found",
+  "selectDirectoryAndScan": "Please select a directory and start scanning.",
+  "comparisonGroupNotFound": "Comparison group not found",
+  "backToList": "Back to List",
+  "selectAFileToPreview": "Select a file to preview",
+  "actionCannotBeUndone": "⚠️ This action cannot be undone!",
+  "restoreFromTrash": "You can restore them from trash later.",
+  "deleteConfirmation": "Are you sure you want to permanently delete {count} files?",
+  "@deleteConfirmation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filesDeleted": "{count} files have been deleted.",
+  "@filesDeleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "moveFilesToTrashConfirmation": "Are you sure you want to move {count} files to trash?",
+  "@moveFilesToTrashConfirmation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filesMovedToTrash": "{count} files have been moved to trash.",
+  "@filesMovedToTrash": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

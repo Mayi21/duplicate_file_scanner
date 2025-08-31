@@ -68,6 +68,21 @@ class FileScannerProvider with ChangeNotifier {
     }
   }
 
+  void removeFiles(List<String> paths) {
+    for (final path in paths) {
+      final groupIndex = _duplicateFiles.indexWhere((g) => g.paths.contains(path));
+      if (groupIndex != -1) {
+        final group = _duplicateFiles[groupIndex];
+        group.paths.remove(path);
+
+        if (group.paths.length < 2) {
+          _duplicateFiles.removeAt(groupIndex);
+        }
+      }
+    }
+    notifyListeners();
+  }
+
   Future<void> startScan() async {
     if (_selectedDirectory == null || _isScanning) {
       return;

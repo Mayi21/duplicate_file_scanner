@@ -51,9 +51,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get deleteFile => '删除文件？';
 
   @override
-  String get deleteConfirmation => '确定要永久删除此文件吗？';
-
-  @override
   String get cancel => '取消';
 
   @override
@@ -174,12 +171,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get keepOldest => '保留最旧';
 
   @override
-  String get keepLargest => '保留最大';
-
-  @override
-  String get keepSmallest => '保留最小';
-
-  @override
   String get comparing => '正在对比';
 
   @override
@@ -205,4 +196,66 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get type => '类型';
+
+  @override
+  String get fullScreen => '全屏';
+
+  @override
+  String get exitFullScreen => '退出全屏';
+
+  @override
+  String get listView => '列表视图';
+
+  @override
+  String get comparisonView => '对比视图';
+
+  @override
+  String get exitComparison => '退出对比';
+
+  @override
+  String get comparisonMode => '对比模式';
+
+  @override
+  String get compareFiles => '对比文件';
+
+  @override
+  String get noDuplicatesFound => '未找到重复文件';
+
+  @override
+  String get selectDirectoryAndScan => '请选择一个目录并开始扫描。';
+
+  @override
+  String get comparisonGroupNotFound => '未找到对比组';
+
+  @override
+  String get backToList => '返回列表';
+
+  @override
+  String get selectAFileToPreview => '选择一个文件以预览';
+
+  @override
+  String get actionCannotBeUndone => '⚠️ 此操作无法撤销！';
+
+  @override
+  String get restoreFromTrash => '您可以稍后从废纸篓恢复它们。';
+
+  @override
+  String deleteConfirmation(int count) {
+    return '确定要永久删除 $count 个文件吗？';
+  }
+
+  @override
+  String filesDeleted(int count) {
+    return '$count 个文件已被删除。';
+  }
+
+  @override
+  String moveFilesToTrashConfirmation(int count) {
+    return '确定要将 $count 个文件移至废纸篓吗？';
+  }
+
+  @override
+  String filesMovedToTrash(int count) {
+    return '$count 个文件已被移至废纸篓。';
+  }
 }

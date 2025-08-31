@@ -18,6 +18,8 @@ import '../widgets/batch_operation_toolbar.dart';
 import '../widgets/file_comparison_view.dart';
 import '../widgets/file_info_tile.dart';
 import '../widgets/preview_panel.dart';
+import '../services/file_operation_service.dart';
+import '../models/file_model.dart';
 import 'video_preview_screen.dart';
 
 enum ViewMode { list, comparison, grid }
@@ -35,6 +37,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   double _leftPanelWidth = 450;
   ViewMode _currentViewMode = ViewMode.list;
   String? _comparisonGroupHash;
+  bool _isFullScreen = false;
   
   @override
   void initState() {
@@ -53,59 +56,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildSingleFilePreview(BuildContext context, String path) {
+    final l10n = AppLocalizations.of(context)!;
     final extension = path.toLowerCase().substring(path.lastIndexOf('.'));
     final imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp'];
     final videoExtensions = ['.mp4', '.mov', '.avi', '.mkv', '.wmv'];
 
+    Widget previewWidget;
+
     if (imageExtensions.contains(extension)) {
-      return Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey[300]!),
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Image.file(File(path), fit: BoxFit.contain),
-        ),
-      );
+      previewWidget = Image.file(File(path), fit: BoxFit.contain);
     } else if (videoExtensions.contains(extension)) {
-      return Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey[300]!),
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: VideoPreviewScreen(videoPath: path),
-        ),
-      );
+      previewWidget = VideoPreviewScreen(videoPath: path);
     } else {
-      return Container(
+      previewWidget = Container(
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey[300]!),
-          borderRadius: BorderRadius.circular(12),
           color: Colors.grey[50],
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
         ),
         child: Center(
           child: Column(
@@ -118,7 +83,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
               const SizedBox(height: 16),
               Text(
-                "${AppLocalizations.of(context)!.noPreviewAvailable}: $extension",
+                "${l10n.noPreviewAvailable}: $extension",
                 style: Theme.of(context).textTheme.bodyMedium,
                 textAlign: TextAlign.center,
               ),
@@ -127,6 +92,31 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ),
       );
     }
+
+    return GestureDetector(
+      onTap: () {
+        if (imageExtensions.contains(extension)) {
+          _showFullScreenPreview(context, path, l10n);
+        }
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey[300]!),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: previewWidget,
+        ),
+      ),
+    );
   }
 
   @override
@@ -259,7 +249,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   Icon(Icons.list, 
                     color: _currentViewMode == ViewMode.list ? Theme.of(context).colorScheme.primary : null),
                   const SizedBox(width: 8),
-                  const Text('List View'),
+                  Text(l10n.listView),
                 ],
               ),
             ),
@@ -270,7 +260,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   Icon(Icons.compare_arrows,
                     color: _currentViewMode == ViewMode.comparison ? Theme.of(context).colorScheme.primary : null),
                   const SizedBox(width: 8),
-                  const Text('Comparison View'),
+                  Text(l10n.comparisonView),
                 ],
               ),
             ),
@@ -534,7 +524,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 _comparisonGroupHash = null;
               });
             },
-            child: const Text('Exit Comparison'),
+            child: Text(l10n.exitComparison),
           ),
         ],
       ),
@@ -772,7 +762,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   _comparisonGroupHash = group.hash;
                 });
               },
-              tooltip: 'Compare files',
+              tooltip: l10n.compareFiles,
             ),
             IconButton(
               icon: const Icon(Icons.visibility_outlined),
@@ -854,7 +844,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       ),
       child: Column(
         children: [
-          // 预览工具栏
+          // Preview toolbar
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -877,32 +867,46 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 if (provider.fileForPreview != null) ...[
                   IconButton(
                     icon: const Icon(Icons.open_in_new_outlined),
-                    onPressed: () {
-                      // TODO: 打开文件所在目录
+                    onPressed: () async {
+                      try {
+                        await FileOperationService.showInFinder(provider.fileForPreview!);
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('${l10n.error}: $e'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      }
                     },
                     tooltip: l10n.showInFinder,
                   ),
                   IconButton(
-                    icon: const Icon(Icons.fullscreen_outlined),
+                    icon: Icon(_isFullScreen ? Icons.fullscreen_exit_outlined : Icons.fullscreen_outlined),
                     onPressed: () {
-                      // TODO: 全屏预览
+                      _showFullScreenPreview(context, provider.fileForPreview!, l10n);
                     },
-                    tooltip: "Full Screen",
+                    tooltip: _isFullScreen ? l10n.exitFullScreen : l10n.fullScreen,
                   ),
                 ],
               ],
             ),
           ),
-          // 预览内容
+          // Preview content
           Expanded(
             child: provider.fileForPreview != null
                 ? Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: _buildSingleFilePreview(context, provider.fileForPreview!),
-                  )
+              padding: const EdgeInsets.all(16),
+              child: _buildSingleFilePreview(context, provider.fileForPreview!),
+            )
                 : (provider.groupForPreview != null
-                    ? PreviewPanel(fileGroup: provider.groupForPreview!)
-                    : _buildEmptyPreviewState(context, l10n)),
+                ? PreviewPanel(
+              fileGroup: provider.groupForPreview!,
+              onFileTap: (path) => provider.selectFileForPreview(path),
+            )
+                : _buildEmptyPreviewState(context, l10n)),
           ),
         ],
       ),
@@ -915,16 +919,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.preview_outlined,
+            Icons.image_search_outlined,
             size: 80,
             color: Colors.grey[400],
           ),
           const SizedBox(height: 16),
           Text(
-            l10n.selectGroupOrFile,
+            l10n.selectAFileToPreview,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
               color: Colors.grey[600],
             ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
@@ -932,14 +937,29 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildComparisonView(BuildContext context, FileScannerProvider provider, AppLocalizations l10n) {
-    final group = provider.duplicateFiles.cast<dynamic>().firstWhere(
-      (g) => g.hash == _comparisonGroupHash,
-      orElse: () => null,
+    final group = provider.duplicateFiles.firstWhere(
+          (g) => g.hash == _comparisonGroupHash,
+      orElse: () => FileGroup(hash: '', size: 0, paths: []),
     );
-    
-    if (group == null) {
+
+    if (group.paths.isEmpty) {
       return Center(
-        child: Text('Comparison group not found'),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(l10n.comparisonGroupNotFound),
+            const SizedBox(height: 8),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  _currentViewMode = ViewMode.list;
+                  _comparisonGroupHash = null;
+                });
+              },
+              child: Text(l10n.backToList),
+            )
+          ],
+        ),
       );
     }
 
@@ -953,17 +973,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   void _handleKeyEvent(KeyEvent event, FileScannerProvider provider, StatisticsProvider stats, AppLocalizations l10n) {
     if (event is KeyDownEvent) {
-      // Delete键删除选中的文件
+      // Delete key deletes selected files
       if (event.logicalKey == LogicalKeyboardKey.delete && stats.totalSelectedFiles > 0) {
         _handleBatchAction(BatchAction.deleteSelected, provider, stats, l10n);
       }
-      // Escape键取消选择
+      // Escape key clears selection
       else if (event.logicalKey == LogicalKeyboardKey.escape) {
         stats.clearAllSelections();
       }
-      // Ctrl+A全选
-      else if (event.logicalKey == LogicalKeyboardKey.keyA && 
-               HardwareKeyboard.instance.isControlPressed) {
+      // Ctrl+A selects all
+      else if (event.logicalKey == LogicalKeyboardKey.keyA &&
+          (HardwareKeyboard.instance.isControlPressed || HardwareKeyboard.instance.isMetaPressed)) {
         _handleBatchAction(BatchAction.selectAll, provider, stats, l10n);
       }
     }
@@ -972,49 +992,29 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   void _handleBatchAction(BatchAction action, FileScannerProvider provider, StatisticsProvider stats, AppLocalizations l10n) {
     switch (action) {
       case BatchAction.selectAll:
-        // TODO: 实现全选所有文件
+        stats.selectAllFiles();
         break;
       case BatchAction.deselectAll:
         stats.clearAllSelections();
         break;
       case BatchAction.keepNewest:
-        // TODO: 实现保留最新文件逻辑
-        _showNotImplementedSnackBar(context, l10n.keepNewest);
+        stats.applyFilterStrategy(FileFilterStrategy.keepNewest);
         break;
       case BatchAction.keepOldest:
-        // TODO: 实现保留最旧文件逻辑
-        _showNotImplementedSnackBar(context, l10n.keepOldest);
-        break;
-      case BatchAction.keepLargest:
-        // TODO: 实现保留最大文件逻辑
-        _showNotImplementedSnackBar(context, l10n.keepLargest);
-        break;
-      case BatchAction.keepSmallest:
-        // TODO: 实现保留最小文件逻辑
-        _showNotImplementedSnackBar(context, l10n.keepSmallest);
+        stats.applyFilterStrategy(FileFilterStrategy.keepOldest);
         break;
       case BatchAction.deleteSelected:
-        _showDeleteConfirmation(context, stats, l10n);
+        _showDeleteConfirmation(context, stats, l10n, provider);
         break;
       case BatchAction.moveToTrash:
-        _showMoveToTrashConfirmation(context, stats, l10n);
+        _showMoveToTrashConfirmation(context, stats, l10n, provider);
         break;
     }
   }
 
-  void _showNotImplementedSnackBar(BuildContext context, String feature) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$feature - Coming Soon!'),
-        backgroundColor: Colors.orange,
-        duration: const Duration(seconds: 2),
-      ),
-    );
-  }
-
-  void _showDeleteConfirmation(BuildContext context, StatisticsProvider stats, AppLocalizations l10n) {
+  void _showDeleteConfirmation(BuildContext context, StatisticsProvider stats, AppLocalizations l10n, FileScannerProvider provider) {
     final selectedFiles = stats.getAllSelectedFiles();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1029,14 +1029,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("${l10n.deleteConfirmation}\n"),
+            Text(l10n.deleteConfirmation(selectedFiles.length)),
+            const SizedBox(height: 16),
             Text(
-              "${selectedFiles.length} ${l10n.files}",
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              "⚠️ This action cannot be undone!",
+              l10n.actionCannotBeUndone,
               style: TextStyle(color: Colors.red[700], fontWeight: FontWeight.w500),
             ),
           ],
@@ -1047,10 +1043,31 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             child: Text(l10n.cancel),
           ),
           ElevatedButton(
-            onPressed: () {
-              // TODO: 实现批量删除
+            onPressed: () async {
               Navigator.of(context).pop();
-              _showNotImplementedSnackBar(context, l10n.deleteSelected);
+              try {
+                final selectedFiles = stats.getAllSelectedFiles();
+                await stats.deleteSelectedFiles();
+                provider.removeFiles(selectedFiles);
+
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(l10n.filesDeleted(selectedFiles.length)),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${l10n.errorDeletingFile}: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: Text(l10n.delete, style: const TextStyle(color: Colors.white)),
@@ -1060,9 +1077,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  void _showMoveToTrashConfirmation(BuildContext context, StatisticsProvider stats, AppLocalizations l10n) {
+  void _showMoveToTrashConfirmation(BuildContext context, StatisticsProvider stats, AppLocalizations l10n, FileScannerProvider provider) {
     final selectedFiles = stats.getAllSelectedFiles();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1077,10 +1094,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Move ${selectedFiles.length} ${l10n.files} to trash?"),
+            Text(l10n.moveFilesToTrashConfirmation(selectedFiles.length)),
             const SizedBox(height: 8),
             Text(
-              "You can restore them from trash later.",
+              l10n.restoreFromTrash,
               style: TextStyle(color: Colors.grey[600]),
             ),
           ],
@@ -1091,10 +1108,30 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             child: Text(l10n.cancel),
           ),
           ElevatedButton(
-            onPressed: () {
-              // TODO: 实现移至回收站
+            onPressed: () async {
               Navigator.of(context).pop();
-              _showNotImplementedSnackBar(context, l10n.moveToTrash);
+              try {
+                final selectedFiles = stats.getAllSelectedFiles();
+                await stats.moveSelectedFilesToTrash();
+                provider.removeFiles(selectedFiles);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(l10n.filesMovedToTrash(selectedFiles.length)),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${l10n.error}: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
             child: Text(l10n.moveToTrash, style: const TextStyle(color: Colors.white)),
@@ -1102,5 +1139,73 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ],
       ),
     );
+  }
+
+  void _showFullScreenPreview(BuildContext context, String filePath, AppLocalizations l10n) {
+    setState(() {
+      _isFullScreen = true;
+    });
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        opaque: false,
+        barrierDismissible: true,
+        pageBuilder: (BuildContext context, _, __) {
+          return Dialog.fullscreen(
+            backgroundColor: Colors.black.withOpacity(0.85),
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
+              appBar: AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                iconTheme: const IconThemeData(color: Colors.white),
+                title: Text(
+                  filePath.split('/').last,
+                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                ),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.open_in_new_outlined, color: Colors.white),
+                    onPressed: () async {
+                      try {
+                        await FileOperationService.showInFinder(filePath);
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('${l10n.error}: $e'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      }
+                    },
+                    tooltip: l10n.showInFinder,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.fullscreen_exit, color: Colors.white),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    tooltip: l10n.exitFullScreen,
+                  ),
+                ],
+              ),
+              body: Center(
+                child: InteractiveViewer(
+                  panEnabled: true,
+                  minScale: 0.5,
+                  maxScale: 4.0,
+                  child: Image.file(File(filePath)),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    ).then((_) {
+      setState(() {
+        _isFullScreen = false;
+      });
+    });
   }
 }

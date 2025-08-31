@@ -182,12 +182,6 @@ abstract class AppLocalizations {
   /// **'Delete File?'**
   String get deleteFile;
 
-  /// No description provided for @deleteConfirmation.
-  ///
-  /// In en, this message translates to:
-  /// **'Are you sure you want to permanently delete this file?'**
-  String get deleteConfirmation;
-
   /// No description provided for @cancel.
   ///
   /// In en, this message translates to:
@@ -428,18 +422,6 @@ abstract class AppLocalizations {
   /// **'Keep Oldest'**
   String get keepOldest;
 
-  /// No description provided for @keepLargest.
-  ///
-  /// In en, this message translates to:
-  /// **'Keep Largest'**
-  String get keepLargest;
-
-  /// No description provided for @keepSmallest.
-  ///
-  /// In en, this message translates to:
-  /// **'Keep Smallest'**
-  String get keepSmallest;
-
   /// No description provided for @comparing.
   ///
   /// In en, this message translates to:
@@ -493,6 +475,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Type'**
   String get type;
+
+  /// No description provided for @fullScreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Screen'**
+  String get fullScreen;
+
+  /// No description provided for @exitFullScreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit Full Screen'**
+  String get exitFullScreen;
+
+  /// No description provided for @listView.
+  ///
+  /// In en, this message translates to:
+  /// **'List View'**
+  String get listView;
+
+  /// No description provided for @comparisonView.
+  ///
+  /// In en, this message translates to:
+  /// **'Comparison View'**
+  String get comparisonView;
+
+  /// No description provided for @exitComparison.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit Comparison'**
+  String get exitComparison;
+
+  /// No description provided for @comparisonMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Comparison Mode'**
+  String get comparisonMode;
+
+  /// No description provided for @compareFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare Files'**
+  String get compareFiles;
+
+  /// No description provided for @noDuplicatesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No duplicates found'**
+  String get noDuplicatesFound;
+
+  /// No description provided for @selectDirectoryAndScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a directory and start scanning.'**
+  String get selectDirectoryAndScan;
+
+  /// No description provided for @comparisonGroupNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Comparison group not found'**
+  String get comparisonGroupNotFound;
+
+  /// No description provided for @backToList.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to List'**
+  String get backToList;
+
+  /// No description provided for @selectAFileToPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a file to preview'**
+  String get selectAFileToPreview;
+
+  /// No description provided for @actionCannotBeUndone.
+  ///
+  /// In en, this message translates to:
+  /// **'⚠️ This action cannot be undone!'**
+  String get actionCannotBeUndone;
+
+  /// No description provided for @restoreFromTrash.
+  ///
+  /// In en, this message translates to:
+  /// **'You can restore them from trash later.'**
+  String get restoreFromTrash;
+
+  /// No description provided for @deleteConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to permanently delete {count} files?'**
+  String deleteConfirmation(int count);
+
+  /// No description provided for @filesDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} files have been deleted.'**
+  String filesDeleted(int count);
+
+  /// No description provided for @moveFilesToTrashConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to move {count} files to trash?'**
+  String moveFilesToTrashConfirmation(int count);
+
+  /// No description provided for @filesMovedToTrash.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} files have been moved to trash.'**
+  String filesMovedToTrash(int count);
 }
 
 class _AppLocalizationsDelegate

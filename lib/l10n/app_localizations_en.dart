@@ -51,10 +51,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteFile => 'Delete File?';
 
   @override
-  String get deleteConfirmation =>
-      'Are you sure you want to permanently delete this file?';
-
-  @override
   String get cancel => 'Cancel';
 
   @override
@@ -176,12 +172,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get keepOldest => 'Keep Oldest';
 
   @override
-  String get keepLargest => 'Keep Largest';
-
-  @override
-  String get keepSmallest => 'Keep Smallest';
-
-  @override
   String get comparing => 'Comparing';
 
   @override
@@ -207,4 +197,67 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get type => 'Type';
+
+  @override
+  String get fullScreen => 'Full Screen';
+
+  @override
+  String get exitFullScreen => 'Exit Full Screen';
+
+  @override
+  String get listView => 'List View';
+
+  @override
+  String get comparisonView => 'Comparison View';
+
+  @override
+  String get exitComparison => 'Exit Comparison';
+
+  @override
+  String get comparisonMode => 'Comparison Mode';
+
+  @override
+  String get compareFiles => 'Compare Files';
+
+  @override
+  String get noDuplicatesFound => 'No duplicates found';
+
+  @override
+  String get selectDirectoryAndScan =>
+      'Please select a directory and start scanning.';
+
+  @override
+  String get comparisonGroupNotFound => 'Comparison group not found';
+
+  @override
+  String get backToList => 'Back to List';
+
+  @override
+  String get selectAFileToPreview => 'Select a file to preview';
+
+  @override
+  String get actionCannotBeUndone => '⚠️ This action cannot be undone!';
+
+  @override
+  String get restoreFromTrash => 'You can restore them from trash later.';
+
+  @override
+  String deleteConfirmation(int count) {
+    return 'Are you sure you want to permanently delete $count files?';
+  }
+
+  @override
+  String filesDeleted(int count) {
+    return '$count files have been deleted.';
+  }
+
+  @override
+  String moveFilesToTrashConfirmation(int count) {
+    return 'Are you sure you want to move $count files to trash?';
+  }
+
+  @override
+  String filesMovedToTrash(int count) {
+    return '$count files have been moved to trash.';
+  }
 }
